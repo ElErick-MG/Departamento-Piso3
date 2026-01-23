@@ -14,11 +14,10 @@ Sistema web para gestionar turnos de compras (botellón de agua, lava platos, as
 ## 🛠️ Stack Tecnológico
 
 - **Frontend**: Next.js 16 (App Router), React 19, TypeScript
-- **Styling**: Tailwind CSS 4.1
-- **Database**: Vercel Postgres (PostgreSQL)
+- **Styling**: Tailwind CSS 3.4
+- **Database**: PostgreSQL (Vercel Postgres o Supabase)
 - **Autenticación**: JWT con cookies HTTP-only
-- **Emails**: Resend API
-- **Deployment**: Vercel (con Cron Jobs)
+- **Deployment**: Vercel
 
 ## 📦 Instalación Local
 
@@ -44,11 +43,8 @@ cp .env.example .env.local
 ```
 
 Variables requeridas:
-- `POSTGRES_URL`: URL de conexión a Vercel Postgres
-- `RESEND_API_KEY`: API key de Resend (https://resend.com)
-- `EMAIL_FROM`: Email verificado en Resend
+- `POSTGRES_URL`: URL de conexión a PostgreSQL (Vercel Postgres o Supabase)
 - `AUTH_SECRET`: Secret para JWT (genera con `openssl rand -base64 32`)
-- `CRON_SECRET`: Secret para proteger endpoint de cron (aleatorio)
 
 ### 4. Configurar base de datos
 
@@ -109,24 +105,11 @@ Abre [http://localhost:3000](http://localhost:3000)
 En **Settings** > **Environment Variables**, agrega:
 
 ```
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
-EMAIL_FROM=noreply@tudominio.com
 AUTH_SECRET=tu-secret-generado-con-openssl
-CRON_SECRET=otro-secret-aleatorio
 NEXT_PUBLIC_APP_URL=https://tu-app.vercel.app
 ```
 
-### 5. Configurar Cron Job
-
-El archivo `vercel.json` ya está configurado para ejecutar notificaciones diarias a las 9:00 AM.
-
-En **Settings** > **Cron Jobs**, verifica que aparezca:
-- **Path**: `/api/cron/notifications`
-- **Schedule**: `0 9 * * *` (9:00 AM diario)
-
-El endpoint está protegido con `CRON_SECRET` en headers.
-
-### 6. Deploy
+### 5. Deploy
 
 ```bash
 git push origin main
@@ -143,8 +126,7 @@ departamento-piso3/
 │   │   ├── auth/           # Login, logout, session
 │   │   ├── supplies/       # CRUD de suministros
 │   │   ├── dishes/         # Registro de platos
-│   │   ├── users/          # Gestión de usuarios
-│   │   └── cron/           # Cron job de notificaciones
+│   │   └── users/          # Gestión de usuarios
 │   ├── dashboard/          # Dashboard principal
 │   ├── dishes/             # Calendario de platos
 │   ├── settings/           # Configuración
@@ -155,7 +137,6 @@ departamento-piso3/
 │   └── auth.ts             # Autenticación JWT
 ├── middleware.ts           # Protección de rutas
 ├── schema.sql              # Schema de base de datos
-├── vercel.json             # Config de Cron Jobs
 └── .env.example            # Ejemplo de variables
 ```
 
@@ -168,13 +149,6 @@ departamento-piso3/
 - **Alertas Visuales**: Verde (>3 días), Amarillo (2-3 días), Rojo (<2 días)
 - **Forzar Turno (Admin)**: Desbloquear y avanzar si alguien olvidó marcar
 
-### Notificaciones
-
-- **Emails Automáticos**: Resend API envía recordatorios
-- **Configuración Flexible**: Cada usuario elige cuántos días antes recibir (0-30)
-- **Doble Recordatorio**: 2 días antes + día del vencimiento
-- **Log de Notificaciones**: Historial de emails enviados
-
 ### Registro de Platos
 
 - **Calendario Semanal**: Vista de lunes a domingo
@@ -185,7 +159,7 @@ departamento-piso3/
 ### Configuración
 
 - **Duraciones Ajustables**: Modifica días según consumo real
-- **Preferencias de Usuario**: Días de anticipación para notificaciones
+- **Preferencias de Usuario**: Configuración personalizada por roommate
 - **Panel Admin**: Gestionar configuración de todos los usuarios
 
 ## 🔒 Seguridad
@@ -243,32 +217,22 @@ UPDATE users SET is_admin = TRUE WHERE id = X;
 | DELETE | `/api/dishes` | Eliminar registro |
 | GET | `/api/users` | Listar usuarios |
 | PATCH | `/api/users/notification-days` | Actualizar preferencias |
-| GET | `/api/cron/notifications` | Enviar notificaciones (cron) |
 
 ## 🐛 Troubleshooting
 
-### Emails no se envían
-
-1. Verifica `RESEND_API_KEY` en variables de entorno
-2. Verifica que `EMAIL_FROM` esté verificado en Resend
-3. Revisa logs en Vercel Functions
-4. Consulta `notifications_log` para errores:
-
-```sql
-SELECT * FROM notifications_log WHERE email_sent = FALSE;
-```
-
-### Cron Job no ejecuta
-
-1. Verifica que `vercel.json` esté en el root
-2. Confirma que el Cron Job aparezca en Vercel dashboard
-3. Prueba manualmente: `curl -H "Authorization: Bearer $CRON_SECRET" https://tu-app.vercel.app/api/cron/notifications`
-
 ### Error de conexión a base de datos
 
-1. Verifica que las variables `POSTGRES_*` estén configuradas
-2. En local, usa `POSTGRES_URL` directamente
-3. Revisa logs de Vercel Functions
+1. Verifica que la variable `POSTGRES_URL` esté configurada
+2. En local, usa `POSTGRES_URL` en `.env.local`
+3. Verifica que la base de datos esté accesible
+4. Revisa logs de Vercel Functions si está en producción
+
+### Error al iniciar sesión
+
+1. Verifica que ejecutaste el `schema.sql` correctamente
+2. Verifica que las contraseñas estén hasheadas (no uses placeholders)
+3. Genera hash con: `node -e "console.log(require('bcryptjs').hashSync('depto123', 10))"`
+4. Actualiza en la BD: `UPDATE users SET password_hash = 'TU_HASH' WHERE username = 'erick';`
 
 ## 📄 Licencia
 
