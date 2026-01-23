@@ -11,7 +11,7 @@ export async function GET() {
     }
 
     const result = await query<User>(
-      'SELECT id, name, email, username, is_admin, notification_days_before, created_at FROM users ORDER BY name'
+      'SELECT id, name, email, username, is_admin, created_at FROM users ORDER BY name'
     );
 
     return NextResponse.json({ users: result.rows });

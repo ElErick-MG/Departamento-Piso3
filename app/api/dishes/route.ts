@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
       startDate = startOfWeek(new Date(firstDayOfYear.getTime() + daysOffset * 24 * 60 * 60 * 1000), { weekStartsOn: 1 });
       endDate = endOfWeek(startDate, { weekStartsOn: 1 });
     } else if (dateParam) {
-      const date = new Date(dateParam);
+      // Crear fecha sin conversión de timezone
+      const [year, month, day] = dateParam.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
       startDate = startOfWeek(date, { weekStartsOn: 1 });
       endDate = endOfWeek(date, { weekStartsOn: 1 });
     } else {
@@ -36,14 +38,21 @@ export async function GET(request: NextRequest) {
       endDate = endOfWeek(new Date(), { weekStartsOn: 1 });
     }
 
+    console.log('🔍 API Dishes - Rango de fechas:', {
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd'),
+    });
+
     const result = await query<DishRecord & { user_name: string }>(
       `SELECT dr.*, u.name as user_name
        FROM dish_records dr
        JOIN users u ON dr.user_id = u.id
-       WHERE dr.record_date >= $1 AND dr.record_date <= $2
+       WHERE dr.record_date::date >= $1::date AND dr.record_date::date <= $2::date
        ORDER BY dr.record_date DESC, dr.created_at DESC`,
       [format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')]
     );
+
+    console.log('📊 API Dishes - Registros encontrados:', result.rows.length);
 
     return NextResponse.json({
       records: result.rows,

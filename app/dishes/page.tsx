@@ -26,6 +26,8 @@ export default function DishesPage() {
   const [weekStart, setWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [formData, setFormData] = useState({
     userId: '',
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -36,7 +38,21 @@ export default function DishesPage() {
 
   useEffect(() => {
     fetchData();
+    fetchSession();
   }, [weekStart]);
+
+  const fetchSession = async () => {
+    try {
+      const response = await fetch('/api/auth/session');
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUserId(data.user.userId);
+        setIsAdmin(data.user.isAdmin);
+      }
+    } catch (error) {
+      console.error('Error fetching session:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -48,6 +64,10 @@ export default function DishesPage() {
 
       const dishesData = await dishesRes.json();
       const usersData = await usersRes.json();
+
+      console.log('📅 Semana solicitada:', weekParam);
+      console.log('📊 Registros recibidos:', dishesData.records);
+      console.log('👥 Usuarios:', usersData.users);
 
       setRecords(dishesData.records || []);
       setUsers(usersData.users || []);
@@ -61,7 +81,7 @@ export default function DishesPage() {
   const handleAddRecord = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.userId || !formData.date || !formData.action) {
+    if (!formData.userId || !formData.action) {
       alert('Completa todos los campos requeridos');
       return;
     }
@@ -72,14 +92,16 @@ export default function DishesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: parseInt(formData.userId),
-          date: formData.date,
+          date: format(new Date(), 'yyyy-MM-dd'), // Siempre fecha actual
           action: formData.action,
           notes: formData.notes || null,
         }),
       });
 
       if (response.ok) {
-        alert('✅ Registro creado');
+        // Primero refrescar los datos
+        await fetchData();
+        // Luego cerrar modal y mostrar mensaje
         setShowAddModal(false);
         setFormData({
           userId: '',
@@ -87,7 +109,7 @@ export default function DishesPage() {
           action: 'wash',
           notes: '',
         });
-        fetchData();
+        alert('✅ Registro creado exitosamente');
       } else {
         const data = await response.json();
         alert(`❌ Error: ${data.error}`);
@@ -106,8 +128,8 @@ export default function DishesPage() {
       });
 
       if (response.ok) {
+        await fetchData();
         alert('✅ Registro eliminado');
-        fetchData();
       } else {
         const data = await response.json();
         alert(`❌ Error: ${data.error}`);
@@ -119,7 +141,11 @@ export default function DishesPage() {
 
   const getRecordsForDay = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return records.filter((r) => r.record_date === dateStr);
+    return records.filter((r) => {
+      // Extraer solo la parte de fecha (YYYY-MM-DD) ignorando hora
+      const recordDate = r.record_date.split('T')[0];
+      return recordDate === dateStr;
+    });
   };
 
   const getActionEmoji = (action: string) => {
@@ -238,13 +264,15 @@ export default function DishesPage() {
                         key={record.id}
                         className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-200 relative group"
                       >
-                        <button
-                          onClick={() => handleDeleteRecord(record.id)}
-                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white text-xs w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition"
-                          title="Eliminar"
-                        >
-                          ×
-                        </button>
+                        {(record.user_id === currentUserId || isAdmin) && (
+                          <button
+                            onClick={() => handleDeleteRecord(record.id)}
+                            className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white text-xs w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition"
+                            title="Eliminar"
+                          >
+                            ×
+                          </button>
+                        )}
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl">{getActionEmoji(record.action)}</span>
                           <p className="text-sm font-semibold text-gray-900">{record.user_name}</p>
@@ -305,17 +333,6 @@ export default function DishesPage() {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  required
-                />
               </div>
 
               <div>
