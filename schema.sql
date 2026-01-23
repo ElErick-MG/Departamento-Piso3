@@ -58,10 +58,10 @@ CREATE INDEX IF NOT EXISTS idx_supply_history_supply ON supply_history(supply_id
 
 -- Usuarios (4 roommates)
 INSERT INTO users (name, email, username, password_hash, is_admin) VALUES
-('Erick', 'erick@example.com', 'erick', '$2a$10$placeholder', TRUE),
-('Roommate 2', 'roommate2@example.com', 'roommate2', '$2a$10$placeholder', FALSE),
-('Roommate 3', 'roommate3@example.com', 'roommate3', '$2a$10$placeholder', FALSE),
-('Roommate 4', 'roommate4@example.com', 'roommate4', '$2a$10$placeholder', FALSE)
+('Erick', 'erick@example.com', 'erick', '$2b$10$36P.jMCHeH8/Myb/Q3ZwLuq4EQpzgmWXXcmPAipbUfCVCTDEpj.rC', TRUE),
+('Jhon', 'jhon@example.com', 'jhon', '$2b$10$FidSqmxsWHQuCME/Ssco9eUnQE/e1gfP7a9tH702RyRqWfuKMKFb2', FALSE),
+('Karla', 'karla@example.com', 'karla', '$2b$10$uvLxVV8o12FXRtFo2sGdJuea.yCx.YqW72BWRI8yPhV1TxRHhdZcK', FALSE),
+('David', 'david@example.com', 'david', '$2b$10$sFlQyhGjUIL9SsXy9SReFeBJyYYo6vSTtJ8F/FxWH0oYzuAKUIALa', FALSE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Suministros iniciales

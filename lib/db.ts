@@ -1,4 +1,12 @@
-import { sql } from '@vercel/postgres';
+import { Pool } from 'pg';
+
+// Crear pool de conexiones
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 export interface User {
   id: number;
@@ -7,7 +15,6 @@ export interface User {
   username: string;
   password_hash: string;
   is_admin: boolean;
-  notification_days_before: number;
   created_at: Date;
 }
 
@@ -43,23 +50,13 @@ export interface DishRecord {
   created_at: Date;
 }
 
-export interface NotificationLog {
-  id: number;
-  supply_id: number;
-  user_id: number;
-  notification_type: 'reminder' | 'overdue';
-  sent_at: Date;
-  email_sent: boolean;
-  email_error: string | null;
-}
-
 // Helper para ejecutar queries
 export async function query<T>(
   text: string,
   params?: any[]
 ): Promise<{ rows: T[] }> {
   try {
-    const result = await sql.query(text, params);
+    const result = await pool.query(text, params);
     return { rows: result.rows as T[] };
   } catch (error) {
     console.error('Database query error:', error);
