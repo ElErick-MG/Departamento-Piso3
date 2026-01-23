@@ -1,5 +1,5 @@
 -- Departamento Piso 3 - Database Schema
--- Compatible con Vercel Postgres (PostgreSQL)
+-- Compatible con PostgreSQL (Vercel Postgres / Supabase)
 
 -- Tabla de usuarios (roommates)
 CREATE TABLE IF NOT EXISTS users (
@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS users (
   username VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   is_admin BOOLEAN DEFAULT FALSE,
-  notification_days_before INTEGER DEFAULT 2, -- Días de anticipación para notificaciones
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -48,33 +47,21 @@ CREATE TABLE IF NOT EXISTS dish_records (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla de log de notificaciones
-CREATE TABLE IF NOT EXISTS notifications_log (
-  id SERIAL PRIMARY KEY,
-  supply_id INTEGER REFERENCES supplies(id),
-  user_id INTEGER REFERENCES users(id),
-  notification_type VARCHAR(50) NOT NULL, -- 'reminder', 'overdue'
-  sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  email_sent BOOLEAN DEFAULT FALSE,
-  email_error TEXT
-);
-
 -- Índices para mejorar performance
 CREATE INDEX IF NOT EXISTS idx_supplies_type ON supplies(supply_type);
 CREATE INDEX IF NOT EXISTS idx_dish_records_date ON dish_records(record_date);
 CREATE INDEX IF NOT EXISTS idx_supply_history_supply ON supply_history(supply_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_supply ON notifications_log(supply_id);
 
 -- Datos iniciales de ejemplo (ajustar nombres y emails reales)
 -- Nota: Las contraseñas deben ser hasheadas antes de insertar
 -- Password por defecto para todos: "depto123" (cambiar en producción)
 
 -- Usuarios (4 roommates)
-INSERT INTO users (name, email, username, password_hash, is_admin, notification_days_before) VALUES
-('Erick', 'erick@example.com', 'erick', '$2a$10$placeholder', TRUE, 2),
-('Roommate 2', 'roommate2@example.com', 'roommate2', '$2a$10$placeholder', FALSE, 2),
-('Roommate 3', 'roommate3@example.com', 'roommate3', '$2a$10$placeholder', FALSE, 2),
-('Roommate 4', 'roommate4@example.com', 'roommate4', '$2a$10$placeholder', FALSE, 3)
+INSERT INTO users (name, email, username, password_hash, is_admin) VALUES
+('Erick', 'erick@example.com', 'erick', '$2a$10$placeholder', TRUE),
+('Roommate 2', 'roommate2@example.com', 'roommate2', '$2a$10$placeholder', FALSE),
+('Roommate 3', 'roommate3@example.com', 'roommate3', '$2a$10$placeholder', FALSE),
+('Roommate 4', 'roommate4@example.com', 'roommate4', '$2a$10$placeholder', FALSE)
 ON CONFLICT (username) DO NOTHING;
 
 -- Suministros iniciales
