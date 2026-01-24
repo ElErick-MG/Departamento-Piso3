@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+#BD
+clean-database.sql
+schema.sql
+update-erick-password.sql
