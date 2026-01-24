@@ -179,18 +179,22 @@ export default function DishesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">🍽️ Registro de Platos</h1>
-              <p className="text-sm text-gray-600">Quién lava y seca cada día</p>
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
+                <span className="text-4xl">🍽️</span>
+                Registro de Platos
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">Quién lava y seca cada día</p>
             </div>
             <button
               onClick={() => router.push('/dashboard')}
-              className="text-blue-600 hover:text-blue-800 transition font-medium"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
             >
-              ← Volver al Dashboard
+              <span className="text-lg">←</span>
+              <span>Dashboard</span>
             </button>
           </div>
         </div>
@@ -199,22 +203,22 @@ export default function DishesPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Week Navigation */}
-        <div className="flex justify-between items-center mb-6 bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="flex justify-between items-center mb-6 bg-gradient-to-r from-white to-blue-50 rounded-xl shadow-md border-2 border-blue-100 p-5">
           <button
             onClick={() => setWeekStart(addDays(weekStart, -7))}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition"
+            className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-blue-500 hover:to-blue-600 hover:text-white text-gray-700 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
           >
             ← Semana Anterior
           </button>
           <div className="text-center">
-            <p className="text-sm text-gray-600">Semana del</p>
-            <p className="text-lg font-bold text-gray-900">
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Semana del</p>
+            <p className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mt-1">
               {format(weekStart, "d 'de' MMMM", { locale: es })} - {format(addDays(weekStart, 6), "d 'de' MMMM, yyyy", { locale: es })}
             </p>
           </div>
           <button
             onClick={() => setWeekStart(addDays(weekStart, 7))}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition"
+            className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-blue-500 hover:to-blue-600 hover:text-white text-gray-700 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Semana Siguiente →
           </button>
@@ -224,9 +228,10 @@ export default function DishesPage() {
         <div className="mb-6 flex justify-end">
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition shadow-sm"
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
           >
-            + Agregar Registro
+            <span className="text-2xl">+</span>
+            <span>Agregar Registro</span>
           </button>
         </div>
 
@@ -291,8 +296,11 @@ export default function DishesPage() {
         </div>
 
         {/* Summary */}
-        <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="font-bold text-gray-900 mb-4">📊 Resumen de la Semana</h3>
+        <div className="mt-8 bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg border-2 border-blue-100 p-6">
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6 flex items-center gap-2">
+            <span className="text-3xl">📊</span>
+            Resumen de la Semana
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {users.map((user) => {
               const userRecords = records.filter((r) => r.user_id === user.id);
@@ -300,10 +308,18 @@ export default function DishesPage() {
               const dryCount = userRecords.filter((r) => r.action === 'dry' || r.action === 'both').length;
 
               return (
-                <div key={user.id} className="bg-gray-50 rounded-lg p-4">
-                  <p className="font-semibold text-gray-900 mb-2">{user.name}</p>
-                  <p className="text-sm text-gray-600">🧽 Lavó: {washCount} veces</p>
-                  <p className="text-sm text-gray-600">🧻 Secó: {dryCount} veces</p>
+                <div key={user.id} className="bg-gradient-to-br from-white to-blue-50 rounded-xl p-5 shadow-md border border-blue-200 hover:shadow-lg transition-all duration-200">
+                  <p className="font-bold text-lg text-gray-900 mb-3 pb-2 border-b-2 border-blue-200">{user.name}</p>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-700 flex items-center gap-2">
+                      <span className="text-lg">🧽</span>
+                      <span>Lavó: <span className="font-bold text-blue-600">{washCount}</span> veces</span>
+                    </p>
+                    <p className="text-sm text-gray-700 flex items-center gap-2">
+                      <span className="text-lg">🧻</span>
+                      <span>Secó: <span className="font-bold text-green-600">{dryCount}</span> veces</span>
+                    </p>
+                  </div>
                 </div>
               );
             })}

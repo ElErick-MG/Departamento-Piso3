@@ -143,36 +143,44 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Departamento Piso 3</h1>
-              <p className="text-sm text-gray-600">Gestión de tareas y turnos</p>
-            </div>
-            <div className="flex items-center gap-4">
-              {session?.isAdmin && (
-                <span className="bg-purple-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full">
-                  ADMIN
-                </span>
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Departamento Piso 3
+              </h1>
+              {session ? (
+                <p className="text-base mt-1">
+                  <span className="text-gray-600">Bienvenido, </span>
+                  <span className="font-bold text-blue-600">{session.username.charAt(0).toUpperCase() + session.username.slice(1).toLowerCase()}</span>
+                  {session.isAdmin && <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-semibold">Admin</span>}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 mt-1">Gestión de tareas y turnos</p>
               )}
+            </div>
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => router.push('/settings')}
-                className="text-gray-600 hover:text-gray-900 transition"
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-600 rounded-lg transition-all duration-200 font-medium"
               >
-                ⚙️ Ajustes
+                <span className="text-lg">⚙️</span>
+                <span>Ajustes</span>
               </button>
               <button
                 onClick={() => router.push('/dishes')}
-                className="text-gray-600 hover:text-gray-900 transition"
+                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-green-500 hover:to-green-600 rounded-lg transition-all duration-200 font-medium"
               >
-                🍽️ Platos
+                <span className="text-lg">🍽️</span>
+                <span>Platos</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="text-red-600 hover:text-red-800 transition font-medium"
+                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 rounded-lg transition-all duration-200 font-semibold border border-red-200 hover:border-transparent"
               >
-                Salir
+                <span className="text-lg">🚪</span>
+                <span>Salir</span>
               </button>
             </div>
           </div>
