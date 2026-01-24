@@ -91,11 +91,6 @@ export default function LoginPage() {
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Usuario por defecto: <span className="font-mono">erick</span></p>
-          <p>Contraseña: <span className="font-mono">depto123</span></p>
-        </div>
       </div>
     </div>
   );
