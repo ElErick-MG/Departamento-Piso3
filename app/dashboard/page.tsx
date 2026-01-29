@@ -144,43 +144,43 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Departamento Piso 3
               </h1>
               {session ? (
-                <p className="text-base mt-1">
+                <p className="text-sm sm:text-base mt-1">
                   <span className="text-gray-600">Bienvenido, </span>
                   <span className="font-bold text-blue-600">{session.username.charAt(0).toUpperCase() + session.username.slice(1).toLowerCase()}</span>
                   {session.isAdmin && <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-semibold">Admin</span>}
                 </p>
               ) : (
-                <p className="text-sm text-gray-500 mt-1">Gestión de tareas y turnos</p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">Gestión de tareas y turnos</p>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => router.push('/settings')}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-600 rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-600 rounded-lg transition-all duration-200 font-medium text-sm flex-1 sm:flex-initial"
               >
                 <span className="text-lg">⚙️</span>
-                <span>Ajustes</span>
+                <span className="hidden sm:inline">Ajustes</span>
               </button>
               <button
                 onClick={() => router.push('/dishes')}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-green-500 hover:to-green-600 rounded-lg transition-all duration-200 font-medium"
+                className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-green-500 hover:to-green-600 rounded-lg transition-all duration-200 font-medium text-sm flex-1 sm:flex-initial"
               >
                 <span className="text-lg">🍽️</span>
-                <span>Platos</span>
+                <span className="hidden sm:inline">Platos</span>
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 rounded-lg transition-all duration-200 font-semibold border border-red-200 hover:border-transparent"
+                className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-red-600 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 rounded-lg transition-all duration-200 font-semibold border border-red-200 hover:border-transparent text-sm flex-1 sm:flex-initial"
               >
                 <span className="text-lg">🚪</span>
-                <span>Salir</span>
+                <span className="hidden sm:inline">Salir</span>
               </button>
             </div>
           </div>
@@ -188,10 +188,10 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Turnos de Compra</h2>
-          <p className="text-gray-600 text-sm">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Turnos de Compra</h2>
+          <p className="text-gray-600 text-xs sm:text-sm">
             Cada persona debe completar su turno antes que el siguiente pueda marcar
           </p>
         </div>

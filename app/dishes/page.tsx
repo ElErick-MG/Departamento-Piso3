@@ -201,37 +201,38 @@ export default function DishesPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Week Navigation */}
-        <div className="flex justify-between items-center mb-6 bg-gradient-to-r from-white to-blue-50 rounded-xl shadow-md border-2 border-blue-100 p-5">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 sm:mb-6 bg-gradient-to-r from-white to-blue-50 rounded-xl shadow-md border-2 border-blue-100 p-3 sm:p-5">
           <button
             onClick={() => setWeekStart(addDays(weekStart, -7))}
-            className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-blue-500 hover:to-blue-600 hover:text-white text-gray-700 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            className="w-full sm:w-auto bg-gradient-to-r from-gray-100 to-gray-200 hover:from-blue-500 hover:to-blue-600 hover:text-white text-gray-700 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-sm sm:text-base"
           >
-            ← Semana Anterior
+            ← <span className="hidden sm:inline">Semana Anterior</span><span className="sm:hidden">Anterior</span>
           </button>
-          <div className="text-center">
+          <div className="text-center flex-1">
             <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Semana del</p>
-            <p className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mt-1">
-              {format(weekStart, "d 'de' MMMM", { locale: es })} - {format(addDays(weekStart, 6), "d 'de' MMMM, yyyy", { locale: es })}
+            <p className="text-sm sm:text-base lg:text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mt-1">
+              <span className="hidden sm:inline">{format(weekStart, "d 'de' MMMM", { locale: es })} - {format(addDays(weekStart, 6), "d 'de' MMMM, yyyy", { locale: es })}</span>
+              <span className="sm:hidden">{format(weekStart, "d MMM", { locale: es })} - {format(addDays(weekStart, 6), "d MMM yyyy", { locale: es })}</span>
             </p>
           </div>
           <button
             onClick={() => setWeekStart(addDays(weekStart, 7))}
-            className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-blue-500 hover:to-blue-600 hover:text-white text-gray-700 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+            className="w-full sm:w-auto bg-gradient-to-r from-gray-100 to-gray-200 hover:from-blue-500 hover:to-blue-600 hover:text-white text-gray-700 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-sm sm:text-base"
           >
-            Semana Siguiente →
+            <span className="hidden sm:inline">Semana Siguiente</span><span className="sm:hidden">Siguiente</span> →
           </button>
         </div>
 
         {/* Add Button */}
-        <div className="mb-6 flex justify-end">
+        <div className="mb-4 sm:mb-6 flex justify-end">
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2.5 sm:py-3 px-5 sm:px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2 text-sm sm:text-base"
           >
-            <span className="text-2xl">+</span>
-            <span>Agregar Registro</span>
+            <span className="text-xl sm:text-2xl">+</span>
+            <span><span className="hidden sm:inline">Agregar </span>Registro</span>
           </button>
         </div>
 
@@ -296,12 +297,12 @@ export default function DishesPage() {
         </div>
 
         {/* Summary */}
-        <div className="mt-8 bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg border-2 border-blue-100 p-6">
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6 flex items-center gap-2">
-            <span className="text-3xl">📊</span>
-            Resumen de la Semana
+        <div className="mt-6 sm:mt-8 bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg border-2 border-blue-100 p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 sm:mb-6 flex items-center gap-2">
+            <span className="text-2xl sm:text-3xl">📊</span>
+            <span>Resumen de la Semana</span>
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {users.map((user) => {
               const userRecords = records.filter((r) => r.user_id === user.id);
               const washCount = userRecords.filter((r) => r.action === 'wash' || r.action === 'both').length;
