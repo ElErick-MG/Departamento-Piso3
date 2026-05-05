@@ -45,7 +45,15 @@ export interface DishRecord {
   id: number;
   user_id: number;
   record_date: Date;
-  action: 'wash' | 'dry' | 'both';
+  action:
+    | 'wash'
+    | 'dry'
+    | 'both'
+    | 'aseo_general'
+    | 'lavar_ducha'
+    | 'limpiar_tacho'
+    | 'limpiar_microondas'
+    | 'lavar_manteles';
   notes: string | null;
   created_at: Date;
 }

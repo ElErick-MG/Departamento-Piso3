@@ -1,44 +1,94 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { format, startOfWeek, addDays } from 'date-fns';
+import { addDays, format, startOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-interface DishRecord {
+interface CleaningRecord {
   id: number;
   user_id: number;
   user_name: string;
   record_date: string;
-  action: 'wash' | 'dry' | 'both';
+  action: CleaningTask;
   notes: string | null;
   created_at: string;
 }
 
-interface User {
+interface GroupMember {
   id: number;
   name: string;
 }
 
-export default function DishesPage() {
-  const [records, setRecords] = useState<DishRecord[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+interface CleaningGroup {
+  id: number;
+  week_start: string;
+  week_end: string;
+  user_ids: number[];
+  group_size: number;
+}
+
+type CleaningTask =
+  | 'wash'
+  | 'dry'
+  | 'both'
+  | 'aseo_general'
+  | 'lavar_ducha'
+  | 'limpiar_tacho'
+  | 'limpiar_microondas'
+  | 'lavar_manteles';
+
+type SessionUser = {
+  userId: number;
+  username: string;
+  isAdmin: boolean;
+};
+
+const TASK_OPTIONS: { value: CleaningTask; label: string; emoji: string }[] = [
+  { value: 'wash', label: 'Lavar platos', emoji: '🧽' },
+  { value: 'dry', label: 'Secar platos', emoji: '🧻' },
+  { value: 'both', label: 'Lavar y secar', emoji: '🧽🧻' },
+  { value: 'aseo_general', label: 'Aseo general', emoji: '🧼' },
+  { value: 'lavar_ducha', label: 'Lavar la ducha', emoji: '🚿' },
+  { value: 'limpiar_tacho', label: 'Limpiar tacho / cambiar funda', emoji: '🗑️' },
+  { value: 'limpiar_microondas', label: 'Limpieza microondas', emoji: '🔥' },
+  { value: 'lavar_manteles', label: 'Lavar manteles', emoji: '🧺' },
+];
+
+export default function CleaningPage() {
+  const [records, setRecords] = useState<CleaningRecord[]>([]);
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [group, setGroup] = useState<CleaningGroup | null>(null);
   const [weekStart, setWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [session, setSession] = useState<SessionUser | null>(null);
   const [formData, setFormData] = useState({
-    userId: '',
     date: format(new Date(), 'yyyy-MM-dd'),
-    action: 'wash' as 'wash' | 'dry' | 'both',
+    action: 'aseo_general' as CleaningTask,
     notes: '',
   });
   const router = useRouter();
 
+  const canRecord = useMemo(() => {
+    if (!session) {
+      return false;
+    }
+    if (session.isAdmin) {
+      return true;
+    }
+    if (!group) {
+      return false;
+    }
+    return group.user_ids.includes(session.userId);
+  }, [group, session]);
+
+  useEffect(() => {
+    fetchSession();
+  }, []);
+
   useEffect(() => {
     fetchData();
-    fetchSession();
   }, [weekStart]);
 
   const fetchSession = async () => {
@@ -46,8 +96,7 @@ export default function DishesPage() {
       const response = await fetch('/api/auth/session');
       if (response.ok) {
         const data = await response.json();
-        setCurrentUserId(data.user.userId);
-        setIsAdmin(data.user.isAdmin);
+        setSession(data.user);
       }
     } catch (error) {
       console.error('Error fetching session:', error);
@@ -57,20 +106,18 @@ export default function DishesPage() {
   const fetchData = async () => {
     try {
       const weekParam = format(weekStart, 'yyyy-MM-dd');
-      const [dishesRes, usersRes] = await Promise.all([
-        fetch(`/api/dishes?date=${weekParam}`),
-        fetch('/api/users'),
-      ]);
+      const currentWeekParam = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
 
-      const dishesData = await dishesRes.json();
-      const usersData = await usersRes.json();
+      if (weekParam === currentWeekParam) {
+        await fetch('/api/cleaning-groups/current');
+      }
 
-      console.log('📅 Semana solicitada:', weekParam);
-      console.log('📊 Registros recibidos:', dishesData.records);
-      console.log('👥 Usuarios:', usersData.users);
+      const response = await fetch(`/api/cleaning-records/week?date=${weekParam}`);
+      const data = await response.json();
 
-      setRecords(dishesData.records || []);
-      setUsers(usersData.users || []);
+      setRecords(data.records || []);
+      setMembers(data.members || []);
+      setGroup(data.group || null);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -81,34 +128,31 @@ export default function DishesPage() {
   const handleAddRecord = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.userId || !formData.action) {
+    if (!formData.action) {
       alert('Completa todos los campos requeridos');
       return;
     }
 
     try {
-      const response = await fetch('/api/dishes', {
+      const response = await fetch('/api/cleaning-records', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: parseInt(formData.userId),
-          date: format(new Date(), 'yyyy-MM-dd'), // Siempre fecha actual
+          date: formData.date,
           action: formData.action,
           notes: formData.notes || null,
         }),
       });
 
       if (response.ok) {
-        // Primero refrescar los datos
         await fetchData();
-        // Luego cerrar modal y mostrar mensaje
         setShowAddModal(false);
-        setFormData({
-          userId: '',
+        setFormData(current => ({
+          ...current,
           date: format(new Date(), 'yyyy-MM-dd'),
-          action: 'wash',
+          action: 'aseo_general',
           notes: '',
-        });
+        }));
         alert('✅ Registro creado exitosamente');
       } else {
         const data = await response.json();
@@ -123,7 +167,7 @@ export default function DishesPage() {
     if (!confirm('¿Eliminar este registro?')) return;
 
     try {
-      const response = await fetch(`/api/dishes?id=${recordId}`, {
+      const response = await fetch(`/api/cleaning-records?id=${recordId}`, {
         method: 'DELETE',
       });
 
@@ -141,29 +185,15 @@ export default function DishesPage() {
 
   const getRecordsForDay = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return records.filter((r) => {
-      // Extraer solo la parte de fecha (YYYY-MM-DD) ignorando hora
-      const recordDate = r.record_date.split('T')[0];
-      return recordDate === dateStr;
-    });
+    return records.filter((record) => record.record_date.split('T')[0] === dateStr);
   };
 
-  const getActionEmoji = (action: string) => {
-    switch (action) {
-      case 'wash': return '🧽';
-      case 'dry': return '🧻';
-      case 'both': return '🧽🧻';
-      default: return '❓';
-    }
+  const getTaskLabel = (action: CleaningTask) => {
+    return TASK_OPTIONS.find(task => task.value === action)?.label ?? action;
   };
 
-  const getActionText = (action: string) => {
-    switch (action) {
-      case 'wash': return 'Lavar';
-      case 'dry': return 'Secar';
-      case 'both': return 'Lavar y Secar';
-      default: return action;
-    }
+  const getTaskEmoji = (action: CleaningTask) => {
+    return TASK_OPTIONS.find(task => task.value === action)?.emoji ?? '🧽';
   };
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -178,16 +208,15 @@ export default function DishesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
-                <span className="text-4xl">🍽️</span>
-                Registro de Platos
+                <span className="text-4xl">🧹</span>
+                Aseo semanal
               </h1>
-              <p className="text-sm text-gray-600 mt-1">Quién lava y seca cada día</p>
+              <p className="text-sm text-gray-600 mt-1">Registro diario de tareas del grupo</p>
             </div>
             <button
               onClick={() => router.push('/dashboard')}
@@ -200,9 +229,28 @@ export default function DishesPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Week Navigation */}
+        <div className="mb-4 sm:mb-6 bg-white border border-blue-100 rounded-xl shadow-sm p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-blue-600 font-semibold">Grupo asignado</p>
+              {group ? (
+                <p className="text-lg font-semibold text-gray-900 mt-1">
+                  {members.length > 0 ? members.map(member => member.name).join(', ') : 'Grupo en curso'}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-600 mt-1">Sin grupo asignado para esta semana</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-blue-600 font-semibold">Semana</p>
+              <p className="text-sm sm:text-base font-bold text-gray-900 mt-1">
+                {format(weekStart, "d 'de' MMMM", { locale: es })} - {format(addDays(weekStart, 6), "d 'de' MMMM, yyyy", { locale: es })}
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4 sm:mb-6 bg-gradient-to-r from-white to-blue-50 rounded-xl shadow-md border-2 border-blue-100 p-3 sm:p-5">
           <button
             onClick={() => setWeekStart(addDays(weekStart, -7))}
@@ -225,18 +273,22 @@ export default function DishesPage() {
           </button>
         </div>
 
-        {/* Add Button */}
-        <div className="mb-4 sm:mb-6 flex justify-end">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="text-sm text-gray-600">
+            {canRecord
+              ? 'Puedes registrar tareas de aseo esta semana.'
+              : 'Solo el grupo asignado o admin puede registrar.'}
+          </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2.5 sm:py-3 px-5 sm:px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2 text-sm sm:text-base"
+            disabled={!canRecord}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2.5 sm:py-3 px-5 sm:px-8 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="text-xl sm:text-2xl">+</span>
             <span><span className="hidden sm:inline">Agregar </span>Registro</span>
           </button>
         </div>
 
-        {/* Week Calendar */}
         <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
           {weekDays.map((day) => {
             const dayRecords = getRecordsForDay(day);
@@ -259,6 +311,11 @@ export default function DishesPage() {
                   <p className="text-xs text-gray-500">
                     {format(day, 'MMM', { locale: es })}
                   </p>
+                  {dayRecords.length > 0 && (
+                    <span className="inline-block mt-2 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                      {dayRecords.length} registro{dayRecords.length === 1 ? '' : 's'}
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -270,7 +327,7 @@ export default function DishesPage() {
                         key={record.id}
                         className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-200 relative group"
                       >
-                        {(record.user_id === currentUserId || isAdmin) && (
+                        {(record.user_id === session?.userId || session?.isAdmin) && (
                           <button
                             onClick={() => handleDeleteRecord(record.id)}
                             className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white text-xs w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition"
@@ -280,10 +337,10 @@ export default function DishesPage() {
                           </button>
                         )}
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xl">{getActionEmoji(record.action)}</span>
+                          <span className="text-xl">{getTaskEmoji(record.action)}</span>
                           <p className="text-sm font-semibold text-gray-900">{record.user_name}</p>
                         </div>
-                        <p className="text-xs text-gray-600">{getActionText(record.action)}</p>
+                        <p className="text-xs text-gray-600">{getTaskLabel(record.action)}</p>
                         {record.notes && (
                           <p className="text-xs text-gray-500 mt-1 italic">"{record.notes}"</p>
                         )}
@@ -296,30 +353,32 @@ export default function DishesPage() {
           })}
         </div>
 
-        {/* Summary */}
         <div className="mt-6 sm:mt-8 bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg border-2 border-blue-100 p-4 sm:p-6">
           <h3 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4 sm:mb-6 flex items-center gap-2">
             <span className="text-2xl sm:text-3xl">📊</span>
-            <span>Resumen de la Semana</span>
+            <span>Resumen del grupo</span>
           </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {users.map((user) => {
-              const userRecords = records.filter((r) => r.user_id === user.id);
-              const washCount = userRecords.filter((r) => r.action === 'wash' || r.action === 'both').length;
-              const dryCount = userRecords.filter((r) => r.action === 'dry' || r.action === 'both').length;
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {members.map((member) => {
+              const memberRecords = records.filter((record) => record.user_id === member.id);
 
               return (
-                <div key={user.id} className="bg-gradient-to-br from-white to-blue-50 rounded-xl p-5 shadow-md border border-blue-200 hover:shadow-lg transition-all duration-200">
-                  <p className="font-bold text-lg text-gray-900 mb-3 pb-2 border-b-2 border-blue-200">{user.name}</p>
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-700 flex items-center gap-2">
-                      <span className="text-lg">🧽</span>
-                      <span>Lavó: <span className="font-bold text-blue-600">{washCount}</span> veces</span>
-                    </p>
-                    <p className="text-sm text-gray-700 flex items-center gap-2">
-                      <span className="text-lg">🧻</span>
-                      <span>Secó: <span className="font-bold text-green-600">{dryCount}</span> veces</span>
-                    </p>
+                <div key={member.id} className="bg-gradient-to-br from-white to-blue-50 rounded-xl p-5 shadow-md border border-blue-200 hover:shadow-lg transition-all duration-200">
+                  <p className="font-bold text-lg text-gray-900 mb-3 pb-2 border-b-2 border-blue-200">{member.name}</p>
+                  <p className="text-sm text-gray-700">
+                    Total registros: <span className="font-bold text-blue-600">{memberRecords.length}</span>
+                  </p>
+                  <div className="mt-3 space-y-1">
+                    {TASK_OPTIONS.map(task => {
+                      const count = memberRecords.filter(record => record.action === task.value).length;
+                      return (
+                        <p key={task.value} className="text-xs text-gray-600 flex items-center gap-2">
+                          <span>{task.emoji}</span>
+                          <span>{task.label}:</span>
+                          <span className="font-semibold text-gray-900">{count}</span>
+                        </p>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -328,41 +387,40 @@ export default function DishesPage() {
         </div>
       </main>
 
-      {/* Add Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Agregar Registro</h2>
-            
+
             <form onSubmit={handleAddRecord} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Persona</label>
-                <select
-                  value={formData.userId}
-                  onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  required
-                >
-                  <option value="">Selecciona...</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="text-sm text-gray-600">
+                Registras como <span className="font-semibold text-gray-900">{session?.username ?? 'usuario'}</span>.
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Acción</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha</label>
+                <input
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tarea</label>
                 <select
                   value={formData.action}
-                  onChange={(e) => setFormData({ ...formData, action: e.target.value as any })}
+                  onChange={(e) => setFormData({ ...formData, action: e.target.value as CleaningTask })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 >
-                  <option value="wash">🧽 Lavar</option>
-                  <option value="dry">🧻 Secar</option>
-                  <option value="both">🧽🧻 Lavar y Secar</option>
+                  {TASK_OPTIONS.map((task) => (
+                    <option key={task.value} value={task.value}>
+                      {task.emoji} {task.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -373,7 +431,7 @@ export default function DishesPage() {
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                  placeholder="Ej: Solo platos del desayuno"
+                  placeholder="Ej: Incluye platos y superficies"
                 />
               </div>
 

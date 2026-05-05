@@ -10,9 +10,10 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session')?.value
 
   // Proteger rutas del dashboard y settings
-  if (request.nextUrl.pathname.startsWith('/dashboard') || 
-      request.nextUrl.pathname.startsWith('/settings') ||
-      request.nextUrl.pathname.startsWith('/dishes')) {
+      if (request.nextUrl.pathname.startsWith('/dashboard') || 
+        request.nextUrl.pathname.startsWith('/settings') ||
+        request.nextUrl.pathname.startsWith('/cleaning') ||
+        request.nextUrl.pathname.startsWith('/reserves')) {
     
     if (!sessionCookie) {
       return NextResponse.redirect(new URL('/login', request.url))
@@ -46,5 +47,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/settings/:path*', '/dishes/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/settings/:path*', '/cleaning/:path*', '/reserves/:path*', '/login'],
 }
