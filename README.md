@@ -1,25 +1,37 @@
-# Departamento Piso 3 - Sistema de Gestión de Tareas
+# Departamento Piso 3 - Sistema de Gestion de Tareas
 
-Sistema web para gestionar turnos de compras (botellón de agua, lava platos, aseo general) y registrar tareas diarias de lavado/secado de platos entre roommates.
+Sistema web para gestionar turnos de compras (botellon de agua, lava platos, aseo general) y registrar tareas diarias de lavado/secado de platos entre roommates. Incluye autenticacion con JWT, API interna con App Router y panel de administracion.
 
-## 🚀 Características
+## 🚀 Caracteristicas
 
-- **Turnos de Compra**: Rotación automática con bloqueo secuencial
-- **Notificaciones por Email**: Recordatorios 2 días antes del vencimiento (configurable)
-- **Duraciones Flexibles**: Ajusta según consumo real
-- **Registro de Platos**: Calendario semanal de quién lava/seca
+- **Turnos de Compra**: Rotacion automatica con bloqueo secuencial
+- **Notificaciones por Email**: Recordatorios 2 dias antes del vencimiento (configurable)
+- **Duraciones Flexibles**: Ajusta segun consumo real
+- **Registro de Platos**: Calendario semanal de quien lava/seca
 - **Panel Admin**: Desbloquear turnos y configurar usuarios
-- **Responsive**: Optimizado para móvil y desktop
+- **Responsive**: Optimizado para movil y desktop
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Stack Tecnologico
 
 - **Frontend**: Next.js 16 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS 3.4
 - **Database**: PostgreSQL (Vercel Postgres o Supabase)
-- **Autenticación**: JWT con cookies HTTP-only
+- **Autenticacion**: JWT con cookies HTTP-only
 - **Deployment**: Vercel
 
-## 📦 Instalación Local
+## 🧭 Contexto y objetivo
+
+El proyecto resuelve la rotacion de tareas recurrentes en un departamento: compras de suministros (con orden definido y bloqueo) y tareas diarias de platos. La logica principal vive en endpoints de la carpeta `app/api` y el frontend consume esas rutas mediante fetch desde paginas del App Router.
+
+## 🧱 Arquitectura general
+
+- **App Router**: Paginas en `app/` y rutas API en `app/api/`.
+- **API interna**: Controla autenticacion, rotacion de suministros, y registro de platos.
+- **Middleware**: Protege rutas privadas y redirecciona al login.
+- **JWT en cookies**: Sesiones seguras con cookies HTTP-only.
+- **PostgreSQL**: Persistencia de usuarios, suministros, historial y registros diarios.
+
+## 📦 Instalacion Local
 
 ### 1. Clonar repositorio
 
@@ -43,8 +55,12 @@ cp .env.example .env.local
 ```
 
 Variables requeridas:
-- `POSTGRES_URL`: URL de conexión a PostgreSQL (Vercel Postgres o Supabase)
+- `POSTGRES_URL`: URL de conexion a PostgreSQL (Vercel Postgres o Supabase)
 - `AUTH_SECRET`: Secret para JWT (genera con `openssl rand -base64 32`)
+
+Variables recomendadas:
+- `NEXT_PUBLIC_APP_URL`: URL publica del sitio para construccion de enlaces
+- `CRON_SECRET`: Token para proteger endpoints de tareas programadas (si aplica)
 
 ### 4. Configurar base de datos
 
@@ -57,7 +73,7 @@ psql $POSTGRES_URL -f schema.sql
 
 O desde el dashboard de Vercel Storage > Postgres > Query.
 
-### 5. Generar contraseñas hasheadas
+### 5. Generar contrasenas hasheadas
 
 Las contraseñas en `schema.sql` son placeholders. Genera hashes reales:
 
@@ -78,6 +94,13 @@ Abre [http://localhost:3000](http://localhost:3000)
 **Login por defecto:**
 - Usuario: `erick`
 - Contraseña: `depto123`
+
+## ▶️ Scripts utiles
+
+- `npm run dev`: servidor de desarrollo
+- `npm run build`: build de produccion
+- `npm run start`: servidor de produccion
+- `npm run lint`: linting
 
 ## 🚀 Deployment en Vercel
 
@@ -134,8 +157,8 @@ departamento-piso3/
 │   └── layout.tsx          # Layout raíz
 ├── lib/
 │   ├── db.ts               # Helpers de base de datos
-│   └── auth.ts             # Autenticación JWT
-├── middleware.ts           # Protección de rutas
+│   └── auth.ts             # Autenticacion JWT
+├── middleware.ts           # Proteccion de rutas
 ├── schema.sql              # Schema de base de datos
 └── .env.example            # Ejemplo de variables
 ```
@@ -145,38 +168,52 @@ departamento-piso3/
 ### Turnos de Compra
 
 - **Bloqueo Secuencial**: Solo el usuario asignado puede marcar su compra
-- **Rotación Automática**: Al completar, pasa al siguiente en el orden
-- **Alertas Visuales**: Verde (>3 días), Amarillo (2-3 días), Rojo (<2 días)
-- **Forzar Turno (Admin)**: Desbloquear y avanzar si alguien olvidó marcar
+- **Rotacion Automatica**: Al completar, pasa al siguiente en el orden
+- **Alertas Visuales**: Verde (>3 dias), Amarillo (2-3 dias), Rojo (<2 dias)
+- **Forzar Turno (Admin)**: Desbloquear y avanzar si alguien olvido marcar
 
 ### Registro de Platos
 
 - **Calendario Semanal**: Vista de lunes a domingo
 - **Acciones**: Lavar, Secar, o Ambas
 - **Resumen**: Contador de tareas por persona
-- **Edición**: Agregar/eliminar registros fácilmente
+- **Edicion**: Agregar/eliminar registros facilmente
 
-### Configuración
+### Configuracion
 
-- **Duraciones Ajustables**: Modifica días según consumo real
-- **Preferencias de Usuario**: Configuración personalizada por roommate
-- **Panel Admin**: Gestionar configuración de todos los usuarios
+- **Duraciones Ajustables**: Modifica dias segun consumo real
+- **Preferencias de Usuario**: Configuracion personalizada por roommate
+- **Panel Admin**: Gestionar configuracion de todos los usuarios
+
+## 🧩 Rutas y paginas principales
+
+- `/login`: Inicio de sesion
+- `/dashboard`: Estado general y accesos rapidos
+- `/dishes`: Calendario semanal de platos
+- `/settings`: Preferencias y configuracion
+
+## 🔐 Autenticacion y seguridad
+
+- JWT con cookies HTTP-only
+- Middleware protege rutas privadas y valida sesion
+- Endpoint de logout limpia cookies
+- Passwords hasheados con bcrypt (10 rounds)
 
 ## 🔒 Seguridad
 
 - **JWT con cookies HTTP-only**: Sesiones seguras
-- **Middleware de Next.js**: Protección de rutas privadas
+- **Middleware de Next.js**: Proteccion de rutas privadas
 - **Cron Secret**: Endpoint de notificaciones protegido
 - **Passwords hasheados**: bcrypt con 10 rounds
-- **HTTPS only en producción**: Cookies secure
+- **HTTPS only en produccion**: Cookies secure
 
 ## 🔧 Mantenimiento
 
 ### Actualizar duraciones basadas en historial
 
-El sistema calcula automáticamente la duración real cada vez que alguien marca una compra. Revisa `supply_history.actual_duration_days` para ajustar.
+El sistema calcula automaticamente la duracion real cada vez que alguien marca una compra. Revisa `supply_history.actual_duration_days` para ajustar.
 
-### Cambiar orden de rotación
+### Cambiar orden de rotacion
 
 Actualiza el array `rotation_order` en la tabla `supplies`:
 
@@ -205,9 +242,9 @@ UPDATE users SET is_admin = TRUE WHERE id = X;
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/auth/login` | Iniciar sesión |
-| POST | `/api/auth/logout` | Cerrar sesión |
-| GET | `/api/auth/session` | Obtener sesión actual |
+| POST | `/api/auth/login` | Iniciar sesion |
+| POST | `/api/auth/logout` | Cerrar sesion |
+| GET | `/api/auth/session` | Obtener sesion actual |
 | GET | `/api/supplies` | Listar suministros |
 | POST | `/api/supplies/complete` | Marcar compra |
 | PATCH | `/api/supplies/duration` | Actualizar duración |
@@ -220,19 +257,25 @@ UPDATE users SET is_admin = TRUE WHERE id = X;
 
 ## 🐛 Troubleshooting
 
-### Error de conexión a base de datos
+### Error de conexion a base de datos
 
-1. Verifica que la variable `POSTGRES_URL` esté configurada
+1. Verifica que la variable `POSTGRES_URL` este configurada
 2. En local, usa `POSTGRES_URL` en `.env.local`
 3. Verifica que la base de datos esté accesible
-4. Revisa logs de Vercel Functions si está en producción
+4. Revisa logs de Vercel Functions si esta en produccion
 
-### Error al iniciar sesión
+### Error al iniciar sesion
 
 1. Verifica que ejecutaste el `schema.sql` correctamente
-2. Verifica que las contraseñas estén hasheadas (no uses placeholders)
+2. Verifica que las contrasenas esten hasheadas (no uses placeholders)
 3. Genera hash con: `node -e "console.log(require('bcryptjs').hashSync('depto123', 10))"`
 4. Actualiza en la BD: `UPDATE users SET password_hash = 'TU_HASH' WHERE username = 'erick';`
+
+## 📌 Notas de desarrollo
+
+- La logica de negocio vive en rutas API y se consume desde el frontend.
+- Para pruebas locales, usa una base de datos real (Vercel Postgres o Supabase).
+- Si agregas un nuevo roommate, recuerda actualizar el orden de rotacion en `supplies`.
 
 ## 📄 Licencia
 
