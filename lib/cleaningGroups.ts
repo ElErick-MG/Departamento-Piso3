@@ -5,7 +5,7 @@ export interface UserRef {
 
 export interface CleaningGroupResult {
   userIds: number[];
-  groupSize: 2 | 3;
+  groupSize: 2;
 }
 
 export type Rng = () => number;
@@ -21,8 +21,7 @@ function shuffle<T>(items: T[], rng: Rng): T[] {
 
 // Regla base del negocio:
 // - El grupo de la semana siguiente excluye a TODOS los usuarios de la semana previa.
-// - Con 5 personas, si quedan 3 elegibles, se asignan 3 para cubrir el ciclo completo.
-// - Si quedan 2 elegibles, se asignan 2 (semana normal).
+// - El tamaño del grupo siempre es 2 para evitar el ciclo 2/3 actual.
 export function generateNextCleaningGroup(
   users: UserRef[],
   lastGroupUserIds: number[] = [],
@@ -39,7 +38,7 @@ export function generateNextCleaningGroup(
     throw new Error('No hay suficientes usuarios elegibles para esta semana.');
   }
 
-  const groupSize: 2 | 3 = eligible.length === 3 ? 3 : 2;
+  const groupSize: 2 = 2;
   const shuffled = shuffle(eligible, rng);
 
   return {
