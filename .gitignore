@@ -24,7 +24,9 @@ dist
 # misc
 .env*.local
 .env
-.vercelignore
+.env.*
+*.local
+*.key
 
 # debug
 npm-debug.log*
@@ -43,5 +45,15 @@ next-env.d.ts
 
 #BD
 clean-database.sql
-schema.sql
 update-erick-password.sql
+*.sqlite
+*.db
+
+# OS / Editores
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+Thumbs.db

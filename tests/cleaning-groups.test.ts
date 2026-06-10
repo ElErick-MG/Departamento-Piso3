@@ -31,12 +31,12 @@ describe('generateNextCleaningGroup', () => {
     const lastGroup = [1, 2];
     const result = generateNextCleaningGroup(users, lastGroup, rng);
 
-    expect(result.groupSize).toBe(3);
-    expect(result.userIds).toHaveLength(3);
+    expect(result.groupSize).toBe(2);
+    expect(result.userIds).toHaveLength(2);
     result.userIds.forEach(id => expect(lastGroup).not.toContain(id));
   });
 
-  it('genera grupo de 2 cuando la semana anterior fue de 3', () => {
+  it('mantiene grupo de 2 aunque la semana anterior haya tenido 3 personas', () => {
     const rng = createRng([0.3, 0.5]);
     const lastGroup = [1, 2, 3];
     const result = generateNextCleaningGroup(users, lastGroup, rng);
@@ -46,11 +46,15 @@ describe('generateNextCleaningGroup', () => {
     result.userIds.forEach(id => expect(lastGroup).not.toContain(id));
   });
 
-  it('respeta restricciones encadenadas entre semanas', () => {
+  it('respeta la exclusión de la semana anterior en cadena', () => {
     const rng = createRng([0.1, 0.9, 0.4, 0.7]);
     const first = generateNextCleaningGroup(users, [], rng);
     const second = generateNextCleaningGroup(users, first.userIds, rng);
     const third = generateNextCleaningGroup(users, second.userIds, rng);
+
+    expect(first.groupSize).toBe(2);
+    expect(second.groupSize).toBe(2);
+    expect(third.groupSize).toBe(2);
 
     second.userIds.forEach(id => expect(first.userIds).not.toContain(id));
     third.userIds.forEach(id => expect(second.userIds).not.toContain(id));
